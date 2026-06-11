@@ -3,7 +3,7 @@ const dns = require('dns');
 dns.setServers(['8.8.8.8']);
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
-const { User, Alumno, Materia, Maestro, AsignacionMaestro, Calificacion, Asistencia } = require('./models/Schemas');
+const { User, Alumno, Materia, Maestro, AsignacionMaestro, Calificacion } = require('./models/Schemas');
 
 async function seed() {
   try {
@@ -16,8 +16,7 @@ async function seed() {
       Materia.deleteMany({}),
       Maestro.deleteMany({}),
       AsignacionMaestro.deleteMany({}),
-      Calificacion.deleteMany({}),
-      Asistencia.deleteMany({})
+      Calificacion.deleteMany({})
     ]);
     console.log('Colecciones limpiadas');
 
@@ -130,35 +129,6 @@ async function seed() {
       { alumno_id: a5._id, materia_id: ed._id, puntaje: 90, semestre: '2025-2' }
     ]);
     console.log('35 calificaciones insertadas');
-
-    const hoy = new Date();
-    await Asistencia.insertMany([
-      {
-        materia_id: matematicas._id, fecha: new Date(hoy.getTime() - 86400000 * 2),
-        registros: [
-          { alumno_id: a1._id, presente: true }, { alumno_id: a2._id, presente: true },
-          { alumno_id: a3._id, presente: false }, { alumno_id: a4._id, presente: true },
-          { alumno_id: a5._id, presente: true }
-        ], tomada_por: maestro1._id
-      },
-      {
-        materia_id: poo._id, fecha: new Date(hoy.getTime() - 86400000),
-        registros: [
-          { alumno_id: a1._id, presente: true }, { alumno_id: a2._id, presente: false },
-          { alumno_id: a3._id, presente: true }, { alumno_id: a4._id, presente: true },
-          { alumno_id: a5._id, presente: false }
-        ], tomada_por: maestro2._id
-      },
-      {
-        materia_id: bd._id, fecha: hoy,
-        registros: [
-          { alumno_id: a1._id, presente: true }, { alumno_id: a2._id, presente: true },
-          { alumno_id: a3._id, presente: true }, { alumno_id: a4._id, presente: false },
-          { alumno_id: a5._id, presente: true }
-        ], tomada_por: maestro2._id
-      }
-    ]);
-    console.log('3 asistencias insertadas');
 
     console.log('Seed completado exitosamente');
     process.exit(0);

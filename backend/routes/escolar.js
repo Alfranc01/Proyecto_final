@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { auth, checkRole } = require('../middleware/auth');
-const { Alumno, Calificacion, Asistencia, Maestro, AsignacionMaestro, Materia, User } = require('../models/Schemas');
+const { Alumno, Calificacion, Maestro, AsignacionMaestro, Materia, User } = require('../models/Schemas');
 
 // ─── RUTAS DE ALUMNO (rol: alumno) ─────────────────────────────────────────
 
@@ -17,23 +17,9 @@ router.get('/alumno/dashboard', auth, checkRole(['alumno']), async (req, res) =>
       ? (calificaciones.reduce((s, c) => s + c.puntaje, 0) / calificaciones.length).toFixed(1)
       : '—';
 
-    const asistencias = await Asistencia.find({ 'registros.alumno_id': alumno._id });
-    let totalAsistencias = 0, presentes = 0;
-    asistencias.forEach(a => {
-      a.registros.forEach(r => {
-        if (r.alumno_id.toString() === alumno._id.toString()) {
-          totalAsistencias++;
-          if (r.presente) presentes++;
-        }
-      });
-    });
-
     res.json({
       perfil: alumno,
       promedio,
-      faltas: totalAsistencias - presentes,
-      totalAsistencias,
-      presentes,
       calificaciones
     });
   } catch (err) {
@@ -52,39 +38,6 @@ router.get('/maestro/mis-grupos', auth, checkRole(['maestro']), async (req, res)
       .populate('materia_id', 'nombre codigo semestre');
 
     res.json({ maestro, grupos: asignaciones });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-router.post('/maestro/asistencia', auth, checkRole(['maestro']), async (req, res) => {
-  try {
-    const { materia_id, grupo, fecha, registros } = req.body;
-    const maestro = await Maestro.findOne({ usuario_id: req.user.id });
-    if (!maestro) return res.status(404).json({ error: 'Maestro no encontrado' });
-
-    const asignacion = await AsignacionMaestro.findOne({
-      maestro_id: maestro._id,
-      materia_id,
-      grupo
-    });
-    if (!asignacion) {
-      return res.status(403).json({ msg: 'Acceso denegado: No tienes los permisos necesarios' });
-    }
-
-    const asistencia = await Asistencia.create({
-      materia_id,
-      fecha,
-      registros,
-      tomada_por: maestro._id
-    });
-
-    const populated = await Asistencia.findById(asistencia._id)
-      .populate('materia_id', 'nombre codigo')
-      .populate('registros.alumno_id', 'nombre matricula')
-      .populate('tomada_por', 'nombre');
-
-    res.status(201).json(populated);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

@@ -1,4 +1,4 @@
-const { Alumno, Calificacion, Maestro, Materia, Asistencia } = require('../models/Schemas');
+const { Alumno, Calificacion, Maestro, Materia } = require('../models/Schemas');
 
 // ---- ALUMNOS ----
 
@@ -34,13 +34,7 @@ async function borrarAlumno(req, res) {
   try {
     const alumno = await Alumno.findByIdAndDelete(req.params.id);
     if (!alumno) return res.status(404).json({ error: 'Alumno no encontrado' });
-    await Promise.all([
-      Calificacion.deleteMany({ alumno_id: req.params.id }),
-      Asistencia.updateMany(
-        {},
-        { $pull: { registros: { alumno_id: req.params.id } } }
-      )
-    ]);
+    await Calificacion.deleteMany({ alumno_id: req.params.id });
     res.json({ message: 'Alumno eliminado' });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -140,6 +134,46 @@ async function borrarCalificacion(req, res) {
   }
 }
 
+// ---- MATERIAS ----
+
+async function crearMateria(req, res) {
+  try {
+    const materia = await Materia.create(req.body);
+    res.status(201).json(materia);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+}
+
+async function listarMaterias(req, res) {
+  try {
+    const materias = await Materia.find().sort({ semestre: 1, nombre: 1 });
+    res.json(materias);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+}
+
+async function editarMateria(req, res) {
+  try {
+    const materia = await Materia.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+    if (!materia) return res.status(404).json({ error: 'Materia no encontrada' });
+    res.json(materia);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+}
+
+async function borrarMateria(req, res) {
+  try {
+    const materia = await Materia.findByIdAndDelete(req.params.id);
+    if (!materia) return res.status(404).json({ error: 'Materia no encontrada' });
+    res.json({ message: 'Materia eliminada' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+}
+
 // ---- HISTORIAL ACADEMICO ----
 
 async function historialAlumno(req, res) {
@@ -148,90 +182,13 @@ async function historialAlumno(req, res) {
       .populate('materia_id', 'nombre codigo semestre')
       .sort({ semestre: 1 });
 
-    const asistencias = await Asistencia.find({ 'registros.alumno_id': req.params.id })
-      .populate('materia_id', 'nombre codigo')
-      .populate('tomada_por', 'nombre');
-
-    const asistenciasMap = {};
-    asistencias.forEach(a => {
-      const key = a.materia_id._id.toString();
-      if (!asistenciasMap[key]) asistenciasMap[key] = { materia: a.materia_id, total: 0, presentes: 0 };
-      a.registros.forEach(r => {
-        if (r.alumno_id.toString() === req.params.id) {
-          asistenciasMap[key].total++;
-          if (r.presente) asistenciasMap[key].presentes++;
-        }
-      });
-    });
-
     const semestres = {};
     calificaciones.forEach(c => {
-      if (!semestres[c.semestre]) semestres[c.semestre] = { calificaciones: [], asistencias: [] };
+      if (!semestres[c.semestre]) semestres[c.semestre] = { calificaciones: [] };
       semestres[c.semestre].calificaciones.push(c);
     });
 
-    Object.entries(asistenciasMap).forEach(([matId, data]) => {
-      const sem = calificaciones.find(c => c.materia_id?._id?.toString() === matId);
-      const semestreKey = sem ? sem.semestre : 'general';
-      if (!semestres[semestreKey]) semestres[semestreKey] = { calificaciones: [], asistencias: [] };
-      semestres[semestreKey].asistencias.push(data);
-    });
-
     res.json({ alumno_id: req.params.id, semestres });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-}
-
-// ---- ASISTENCIAS ----
-
-async function crearAsistencia(req, res) {
-  try {
-    const asistencia = await Asistencia.create(req.body);
-    const populated = await Asistencia.findById(asistencia._id)
-      .populate('materia_id', 'nombre codigo')
-      .populate('registros.alumno_id', 'nombre matricula')
-      .populate('tomada_por', 'nombre');
-    res.status(201).json(populated);
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
-}
-
-async function listarAsistencias(req, res) {
-  try {
-    const filter = {};
-    if (req.query.materia_id) filter.materia_id = req.query.materia_id;
-    if (req.query.fecha) filter.fecha = new Date(req.query.fecha);
-    const asistencias = await Asistencia.find(filter)
-      .populate('materia_id', 'nombre codigo')
-      .populate('registros.alumno_id', 'nombre matricula')
-      .populate('tomada_por', 'nombre')
-      .sort({ fecha: -1 });
-    res.json(asistencias);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-}
-
-async function editarAsistencia(req, res) {
-  try {
-    const asistencia = await Asistencia.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true })
-      .populate('materia_id', 'nombre codigo')
-      .populate('registros.alumno_id', 'nombre matricula')
-      .populate('tomada_por', 'nombre');
-    if (!asistencia) return res.status(404).json({ error: 'Asistencia no encontrada' });
-    res.json(asistencia);
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
-}
-
-async function borrarAsistencia(req, res) {
-  try {
-    const asistencia = await Asistencia.findByIdAndDelete(req.params.id);
-    if (!asistencia) return res.status(404).json({ error: 'Asistencia no encontrada' });
-    res.json({ message: 'Asistencia eliminada' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -241,6 +198,6 @@ module.exports = {
   crearAlumno, listarAlumnos, editarAlumno, borrarAlumno,
   crearMaestro, listarMaestros, editarMaestro, borrarMaestro,
   crearCalificacion, listarCalificaciones, editarCalificacion, borrarCalificacion,
-  historialAlumno,
-  crearAsistencia, listarAsistencias, editarAsistencia, borrarAsistencia
+  crearMateria, listarMaterias, editarMateria, borrarMateria,
+  historialAlumno
 };

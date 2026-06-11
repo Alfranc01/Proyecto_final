@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import {
   GraduationCap, Users, BookOpen, BarChart3, LogOut, Plus, Trash2, Edit,
-  UserCheck, ClipboardList, Calendar, History, CheckSquare, XSquare, ArrowUp, ArrowDown
+  UserCheck, ClipboardList, Calendar, History, ArrowUp, ArrowDown
 } from 'lucide-react';
 
 // --- CONFIGURACIÓN DE URL PARA PRODUCCIÓN ---
@@ -15,7 +15,6 @@ const navItems = [
   { key: 'maestros', label: 'Maestros', icon: UserCheck },
   { key: 'materias', label: 'Materias', icon: BookOpen },
   { key: 'calificaciones', label: 'Calificaciones', icon: ClipboardList },
-  { key: 'asistencia', label: 'Tomar Lista', icon: Calendar },
   { key: 'historial', label: 'Historial', icon: History },
 ];
 
@@ -50,7 +49,6 @@ function App() {
   const [maestros, setMaestros] = useState([]);
   const [materias, setMaterias] = useState([]);
   const [calificaciones, setCalificaciones] = useState([]);
-  const [asistencias, setAsistencias] = useState([]);
   const [historial, setHistorial] = useState(null);
   const [showModal, setShowModal] = useState(null);
   const [form, setForm] = useState({});
@@ -97,15 +95,6 @@ function App() {
       if (c) setCalificaciones(c);
       if (a) setAlumnos(a);
       if (m) setMaterias(m);
-    }
-    if (page === 'asistencia') {
-      const [a, m, mats, asis] = await Promise.all([
-        api('/api/alumnos'), api('/api/maestros'), api('/api/materias'), api('/api/asistencias')
-      ]);
-      if (a) setAlumnos(a);
-      if (m) setMaestros(m);
-      if (mats) setMaterias(mats);
-      if (asis) setAsistencias(asis);
     }
     if (page === 'historial') {
       const [a, m] = await Promise.all([api('/api/alumnos'), api('/api/materias')]);
@@ -178,6 +167,7 @@ function App() {
     if (endpoint === 'calificaciones') setForm({ alumno_id: '', materia_id: '', puntaje: '', semestre: '' });
     else if (endpoint === 'alumnos') setForm({ nombre: '', matricula: '', carrera: '', estado: 'Activo' });
     else if (endpoint === 'maestros') setForm({ nombre: '', email: '', materias: [] });
+    else if (endpoint === 'materias') setForm({ nombre: '', codigo: '', semestre: '' });
     else setForm({});
     setEditId(null);
   };
@@ -194,10 +184,6 @@ function App() {
     if (idx >= 0) current.splice(idx, 1);
     else current.push(id);
     setForm({ ...form, materias: [...current] });
-  };
-
-  const toggleAsistencia = (id) => {
-    setForm({ ...form, [id]: !form[id] });
   };
 
   if (!token) {
@@ -346,23 +332,33 @@ function App() {
           <>
             <div className="header"><h2>Materias del Plan de Estudios</h2></div>
             <div className="section">
-              <div className="section-header"><h3><BookOpen size={20} /> Materias Registradas</h3></div>
-              <table>
-                <thead><tr>
-                  <SortHeader label="Código" sortKey="codigo" config={sort} onSort={handleSort} />
-                  <SortHeader label="Nombre" sortKey="nombre" config={sort} onSort={handleSort} />
-                  <SortHeader label="Semestre" sortKey="semestre" config={sort} onSort={handleSort} />
-                </tr></thead>
-                <tbody>
-                  {sortData(materias, sort).map(m => (
-                    <tr key={m._id}>
-                      <td><span className="badge badge-primary">{m.codigo}</span></td>
-                      <td>{m.nombre}</td>
-                      <td>{m.semestre}° Semestre</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <div className="section-header">
+                <h3><BookOpen size={20} /> Materias Registradas</h3>
+                <button className="btn btn-primary" onClick={() => openCreate('materias')}><Plus size={16} /> Nueva</button>
+              </div>
+              {materias.length === 0 ? <div className="empty">Sin registros</div> : (
+                <table>
+                  <thead><tr>
+                    <SortHeader label="Código" sortKey="codigo" config={sort} onSort={handleSort} />
+                    <SortHeader label="Nombre" sortKey="nombre" config={sort} onSort={handleSort} />
+                    <SortHeader label="Semestre" sortKey="semestre" config={sort} onSort={handleSort} />
+                    <th>Acciones</th>
+                  </tr></thead>
+                  <tbody>
+                    {sortData(materias, sort).map(m => (
+                      <tr key={m._id}>
+                        <td><span className="badge badge-primary">{m.codigo}</span></td>
+                        <td>{m.nombre}</td>
+                        <td>{m.semestre}° Semestre</td>
+                        <td className="actions-cell">
+                          <button className="btn-icon" onClick={() => handleEdit('materias', m)}><Edit size={14} /></button>
+                          <button className="btn-icon danger" onClick={() => handleDelete('materias', m._id)}><Trash2 size={14} /></button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
             </div>
           </>
         )}
@@ -397,75 +393,6 @@ function App() {
                           <button className="btn-icon" onClick={() => handleEdit('calificaciones', c)}><Edit size={14} /></button>
                           <button className="btn-icon danger" onClick={() => handleDelete('calificaciones', c._id)}><Trash2 size={14} /></button>
                         </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-            </div>
-          </>
-        )}
-
-        {page === 'asistencia' && (
-          <>
-            <div className="header"><h2>Tomar Lista de Asistencia</h2></div>
-            <div className="section">
-              <div className="section-header"><h3><Calendar size={20} /> Nueva Asistencia</h3></div>
-              <form onSubmit={handleSubmit} style={{ maxWidth: 500, marginBottom: 24 }}>
-                <div className="form-group">
-                  <label>Materia</label>
-                  <select value={form.materia_id || ''} onChange={e => setForm({...form, materia_id: e.target.value})} required>
-                    <option value="">Seleccionar materia...</option>
-                    {materias.map(m => <option key={m._id} value={m._id}>{m.nombre}</option>)}
-                  </select>
-                </div>
-                <div className="form-group">
-                  <label>Maestro</label>
-                  <select value={form.tomada_por || ''} onChange={e => setForm({...form, tomada_por: e.target.value})} required>
-                    <option value="">Seleccionar maestro...</option>
-                    {maestros.map(m => <option key={m._id} value={m._id}>{m.nombre}</option>)}
-                  </select>
-                </div>
-                <div className="form-group">
-                  <label>Fecha</label>
-                  <input type="date" value={form.fecha ? form.fecha.split('T')[0] : new Date().toISOString().split('T')[0]}
-                    onChange={e => setForm({...form, fecha: e.target.value})} required />
-                </div>
-                <h4 style={{ marginBottom: 12, marginTop: 16 }}>Alumnos</h4>
-                <div className="asistencia-list">
-                  {alumnos.map(a => (
-                    <label key={a._id} className="asistencia-item">
-                      <input type="checkbox" checked={form[a._id] || false} onChange={() => toggleAsistencia(a._id)} />
-                      <span className={form[a._id] ? 'presente' : 'ausente'}>
-                        {form[a._id] ? <CheckSquare size={16} /> : <XSquare size={16} />}
-                      </span>
-                      {a.nombre} ({a.matricula})
-                    </label>
-                  ))}
-                </div>
-                <button type="submit" className="btn btn-primary" style={{ marginTop: 16 }}>
-                  <Calendar size={16} /> Registrar Asistencia
-                </button>
-              </form>
-            </div>
-            
-            <div className="section">
-              <div className="section-header"><h3>Historial de Asistencias</h3></div>
-              {asistencias.length === 0 ? <div className="empty">Sin registros</div> : (
-                <table>
-                  <thead><tr>
-                    <SortHeader label="Fecha" sortKey="fecha" config={sort} onSort={handleSort} />
-                    <th>Materia</th><th>Maestro</th>
-                    <th>Presentes</th><th>Total</th>
-                  </tr></thead>
-                  <tbody>
-                    {sortData(asistencias, sort).map(a => (
-                      <tr key={a._id}>
-                        <td>{new Date(a.fecha).toLocaleDateString()}</td>
-                        <td>{a.materia_id?.nombre || '—'}</td>
-                        <td>{a.tomada_por?.nombre || '—'}</td>
-                        <td className="text-success">{a.registros?.filter(r => r.presente).length || 0}</td>
-                        <td>{a.registros?.length || 0}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -525,16 +452,6 @@ function App() {
                             </tbody>
                           </table>
                         )}
-                        {data.asistencias.length > 0 && (
-                          <div style={{ marginTop: 8 }}>
-                            <h5 style={{ color: 'var(--text-light)', marginBottom: 8 }}>Asistencia</h5>
-                            <div className="tags">
-                              {data.asistencias.map((a, i) => (
-                                <span key={i} className="tag">{a.materia?.nombre || 'Materia'}: {a.presentes}/{a.total}</span>
-                              ))}
-                            </div>
-                          </div>
-                        )}
                       </div>
                     );
                   })
@@ -548,7 +465,7 @@ function App() {
       {showModal && (
         <div className="modal-overlay" onClick={() => { setShowModal(null); setEditId(null); }}>
           <div className="modal" onClick={e => e.stopPropagation()}>
-            <h3>{editId ? 'Editar' : 'Nuevo'} {showModal === 'alumnos' ? 'Alumno' : showModal === 'maestros' ? 'Maestro' : 'Calificación'}</h3>
+            <h3>{editId ? 'Editar' : 'Nuevo'} {showModal === 'alumnos' ? 'Alumno' : showModal === 'maestros' ? 'Maestro' : showModal === 'materias' ? 'Materia' : 'Calificación'}</h3>
             <form onSubmit={handleSubmit}>
               {showModal === 'alumnos' && (
                 <>
@@ -571,6 +488,18 @@ function App() {
                         </label>
                       ))}
                     </div>
+                  </div>
+                </>
+              )}
+              {showModal === 'materias' && (
+                <>
+                  <div className="form-group"><label>Nombre</label><input type="text" value={form.nombre || ''} onChange={e => setForm({ ...form, nombre: e.target.value })} required /></div>
+                  <div className="form-group"><label>Código</label><input type="text" value={form.codigo || ''} onChange={e => setForm({ ...form, codigo: e.target.value })} required /></div>
+                  <div className="form-group"><label>Semestre</label>
+                    <select value={form.semestre || ''} onChange={e => setForm({ ...form, semestre: Number(e.target.value) })} required>
+                      <option value="">Seleccionar...</option>
+                      {[1,2,3,4,5,6,7,8,9,10].map(s => <option key={s} value={s}>{s}° Semestre</option>)}
+                    </select>
                   </div>
                 </>
               )}

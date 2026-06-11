@@ -40,22 +40,11 @@ const calificacionSchema = new mongoose.Schema({
   semestre: { type: String, required: true }
 }, { timestamps: true });
 
-const asistenciaSchema = new mongoose.Schema({
-  materia_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Materia', required: true },
-  fecha: { type: Date, required: true },
-  registros: [{
-    alumno_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Alumno', required: true },
-    presente: { type: Boolean, required: true }
-  }],
-  tomada_por: { type: mongoose.Schema.Types.ObjectId, ref: 'Maestro' }
-}, { timestamps: true });
-
 module.exports = {
   User: mongoose.model('User', userSchema),
   Alumno: mongoose.model('Alumno', alumnoSchema),
   Materia: mongoose.model('Materia', materiaSchema),
   Maestro: mongoose.model('Maestro', maestroSchema),
   AsignacionMaestro: mongoose.model('AsignacionMaestro', asignacionMaestroSchema),
-  Calificacion: mongoose.model('Calificacion', calificacionSchema),
-  Asistencia: mongoose.model('Asistencia', asistenciaSchema)
+  Calificacion: mongoose.model('Calificacion', calificacionSchema)
 };

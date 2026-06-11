@@ -10,10 +10,10 @@ const {
   crearAlumno, listarAlumnos, editarAlumno, borrarAlumno,
   crearMaestro, listarMaestros, editarMaestro, borrarMaestro,
   crearCalificacion, listarCalificaciones, editarCalificacion, borrarCalificacion,
-  historialAlumno,
-  crearAsistencia, listarAsistencias, editarAsistencia, borrarAsistencia
+  crearMateria, listarMaterias, editarMateria, borrarMateria,
+  historialAlumno
 } = require('./controllers/crudController');
-const { Alumno, Calificacion, Maestro, Materia, Asistencia } = require('./models/Schemas');
+const { Alumno, Calificacion, Maestro, Materia } = require('./models/Schemas');
 const { auth } = require('./middleware/auth');
 const escolarRoutes = require('./routes/escolar');
 
@@ -52,14 +52,10 @@ app.get('/api/stats', auth, async (req, res) => {
   }
 });
 
-app.get('/api/materias', auth, async (req, res) => {
-  try {
-    const materias = await Materia.find().sort({ semestre: 1, nombre: 1 });
-    res.json(materias);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
+app.get('/api/materias', auth, listarMaterias);
+app.post('/api/materias', auth, crearMateria);
+app.put('/api/materias/:id', auth, editarMateria);
+app.delete('/api/materias/:id', auth, borrarMateria);
 
 app.get('/api/alumnos', auth, listarAlumnos);
 app.post('/api/alumnos', auth, crearAlumno);
@@ -75,11 +71,6 @@ app.get('/api/calificaciones', auth, listarCalificaciones);
 app.post('/api/calificaciones', auth, crearCalificacion);
 app.put('/api/calificaciones/:id', auth, editarCalificacion);
 app.delete('/api/calificaciones/:id', auth, borrarCalificacion);
-
-app.get('/api/asistencias', auth, listarAsistencias);
-app.post('/api/asistencias', auth, crearAsistencia);
-app.put('/api/asistencias/:id', auth, editarAsistencia);
-app.delete('/api/asistencias/:id', auth, borrarAsistencia);
 
 app.get('/api/historial/:id', auth, historialAlumno);
 
