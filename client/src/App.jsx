@@ -128,15 +128,10 @@ function App() {
     e.preventDefault();
     const isEdit = editId !== null;
     let body = { ...form };
-    if (showModal === 'asistencias') {
-      body.registros = alumnos.map(a => ({
-        alumno_id: a._id,
-        presente: body[a._id] || false
-      }));
-    }
     const url = isEdit ? `/api/${showModal}/${editId}` : `/api/${showModal}`;
     const res = await api(url, { method: isEdit ? 'PUT' : 'POST', body: JSON.stringify(body) });
-    if (res && res.error) return alert(res.error);
+    if (!res) return alert('Error de conexión con el servidor');
+    if (res.error) return alert(res.error);
     setShowModal(null); setForm({}); setEditId(null);
     fetchData();
   };
@@ -377,6 +372,7 @@ function App() {
                     <th>Alumno</th>
                     <th>Matrícula</th>
                     <th>Materia</th>
+                    <th>Código</th>
                     <SortHeader label="Puntaje" sortKey="puntaje" config={sort} onSort={handleSort} />
                     <SortHeader label="Semestre" sortKey="semestre" config={sort} onSort={handleSort} />
                     <th>Acciones</th>
@@ -387,6 +383,7 @@ function App() {
                         <td>{c.alumno_id?.nombre || '—'}</td>
                         <td>{c.alumno_id?.matricula || '—'}</td>
                         <td>{c.materia_id?.nombre || '—'}</td>
+                        <td><span className="badge badge-primary">{c.materia_id?.codigo || '—'}</span></td>
                         <td><span className={`badge ${c.puntaje >= 60 ? 'badge-active' : 'badge-inactive'}`}>{c.puntaje}</span></td>
                         <td>{c.semestre}</td>
                         <td className="actions-cell">
@@ -514,7 +511,7 @@ function App() {
                   <div className="form-group"><label>Materia</label>
                     <select value={form.materia_id || ''} onChange={e => setForm({ ...form, materia_id: e.target.value })} required>
                       <option value="">Seleccionar...</option>
-                      {materias.map(m => <option key={m._id} value={m._id}>{m.nombre}</option>)}
+                      {materias.map(m => <option key={m._id} value={m._id}>{m.codigo} - {m.nombre} ({m.semestre}° Semestre)</option>)}
                     </select>
                   </div>
                   <div className="form-group"><label>Puntaje (0-100)</label><input type="number" min="0" max="100" value={form.puntaje || ''} onChange={e => setForm({ ...form, puntaje: Number(e.target.value) })} required /></div>
