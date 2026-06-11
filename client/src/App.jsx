@@ -1,4 +1,3 @@
-const BASE_URL = window.location.hostname.includes('vercel.app') ? 'https://proyecto-final-2-1kya.onrender.com' : ''; 
 import { useState, useEffect } from 'react';
 import {
   GraduationCap, Users, BookOpen, BarChart3, LogOut, Plus, Trash2, Edit,
@@ -6,7 +5,6 @@ import {
 } from 'lucide-react';
 
 // --- CONFIGURACIÓN DE URL PARA PRODUCCIÓN ---
-// Si detecta que está corriendo en Vercel usa Render; si estás en tu compu local usa localhost.
 const BASE_URL = window.location.hostname.includes('vercel.app') 
   ? 'https://proyecto-final-2-1kya.onrender.com' 
   : '';
@@ -62,7 +60,6 @@ function App() {
 
   const api = async (url, opts = {}) => {
     try {
-      // Se le concatena el BASE_URL de Render al inicio de la petición
       const res = await fetch(`${BASE_URL}${url}`, {
         ...opts,
         headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}), ...opts.headers },
@@ -123,7 +120,6 @@ function App() {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    // Agregamos el BASE_URL aquí también para que busque el login en Render
     const res = await fetch(`${BASE_URL}/api/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -350,7 +346,7 @@ function App() {
           <>
             <div className="header"><h2>Materias del Plan de Estudios</h2></div>
             <div className="section">
-              <div className="section-header"><h3><BookOpen size={20} /> 7 Materias Fijas</h3></div>
+              <div className="section-header"><h3><BookOpen size={20} /> Materias Registradas</h3></div>
               <table>
                 <thead><tr>
                   <SortHeader label="Código" sortKey="codigo" config={sort} onSort={handleSort} />
@@ -452,6 +448,7 @@ function App() {
                 </button>
               </form>
             </div>
+            
             <div className="section">
               <div className="section-header"><h3>Historial de Asistencias</h3></div>
               {asistencias.length === 0 ? <div className="empty">Sin registros</div> : (
@@ -555,16 +552,16 @@ function App() {
             <form onSubmit={handleSubmit}>
               {showModal === 'alumnos' && (
                 <>
-                  <div className="form-group"><label>Nombre</label><input type="text" value={form.nombre || ''} onChange={e => setForm({...form, nombre: e.target.value})} required /></div>
-                  <div className="form-group"><label>Matrícula</label><input type="text" value={form.matricula || ''} onChange={e => setForm({...form, matricula: e.target.value})} required /></div>
-                  <div className="form-group"><label>Carrera</label><input type="text" value={form.carrera || ''} onChange={e => setForm({...form, carrera: e.target.value})} required /></div>
-                  <div className="form-group"><label>Estado</label><select value={form.estado || 'Activo'} onChange={e => setForm({...form, estado: e.target.value})}><option value="Activo">Activo</option><option value="Inactivo">Inactivo</option></select></div>
+                  <div className="form-group"><label>Nombre</label><input type="text" value={form.nombre || ''} onChange={e => setForm({ ...form, nombre: e.target.value })} required /></div>
+                  <div className="form-group"><label>Matrícula</label><input type="text" value={form.matricula || ''} onChange={e => setForm({ ...form, matricula: e.target.value })} required /></div>
+                  <div className="form-group"><label>Carrera</label><input type="text" value={form.carrera || ''} onChange={e => setForm({ ...form, carrera: e.target.value })} required /></div>
+                  <div className="form-group"><label>Estado</label><select value={form.estado || 'Activo'} onChange={e => setForm({ ...form, estado: e.target.value })}><option value="Activo">Activo</option><option value="Inactivo">Inactivo</option></select></div>
                 </>
               )}
               {showModal === 'maestros' && (
                 <>
-                  <div className="form-group"><label>Nombre</label><input type="text" value={form.nombre || ''} onChange={e => setForm({...form, nombre: e.target.value})} required /></div>
-                  <div className="form-group"><label>Email</label><input type="email" value={form.email || ''} onChange={e => setForm({...form, email: e.target.value})} required /></div>
+                  <div className="form-group"><label>Nombre</label><input type="text" value={form.nombre || ''} onChange={e => setForm({ ...form, nombre: e.target.value })} required /></div>
+                  <div className="form-group"><label>Email</label><input type="email" value={form.email || ''} onChange={e => setForm({ ...form, email: e.target.value })} required /></div>
                   <div className="form-group"><label>Materias a impartir</label>
                     <div className="materias-grid">
                       {materias.map(m => (
@@ -580,20 +577,20 @@ function App() {
               {showModal === 'calificaciones' && (
                 <>
                   <div className="form-group"><label>Alumno</label>
-                    <select value={form.alumno_id || ''} onChange={e => setForm({...form, alumno_id: e.target.value})} required>
+                    <select value={form.alumno_id || ''} onChange={e => setForm({ ...form, alumno_id: e.target.value })} required>
                       <option value="">Seleccionar...</option>
                       {alumnos.map(a => <option key={a._id} value={a._id}>{a.nombre} ({a.matricula})</option>)}
                     </select>
                   </div>
                   <div className="form-group"><label>Materia</label>
-                    <select value={form.materia_id || ''} onChange={e => setForm({...form, materia_id: e.target.value})} required>
+                    <select value={form.materia_id || ''} onChange={e => setForm({ ...form, materia_id: e.target.value })} required>
                       <option value="">Seleccionar...</option>
                       {materias.map(m => <option key={m._id} value={m._id}>{m.nombre}</option>)}
                     </select>
                   </div>
-                  <div className="form-group"><label>Puntaje (0-100)</label><input type="number" min="0" max="100" value={form.puntaje || ''} onChange={e => setForm({...form, puntaje: Number(e.target.value)})} required /></div>
+                  <div className="form-group"><label>Puntaje (0-100)</label><input type="number" min="0" max="100" value={form.puntaje || ''} onChange={e => setForm({ ...form, puntaje: Number(e.target.value) })} required /></div>
                   <div className="form-group"><label>Semestre</label>
-                    <select value={form.semestre || ''} onChange={e => setForm({...form, semestre: e.target.value})} required>
+                    <select value={form.semestre || ''} onChange={e => setForm({ ...form, semestre: e.target.value })} required>
                       <option value="">Seleccionar...</option>
                       <option value="2025-1">2025-1</option>
                       <option value="2025-2">2025-2</option>
