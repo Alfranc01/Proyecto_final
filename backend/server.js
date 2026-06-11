@@ -83,7 +83,10 @@ app.delete('/api/asistencias/:id', auth, borrarAsistencia);
 
 app.get('/api/historial/:id', auth, historialAlumno);
 
-mongoose.connect(process.env.MONGODB_URI)
+// --- CAMBIO AQUÍ: Ponemos tu URL real directamente en una constante ---
+const mongoURI = "mongodb+srv://Alfranc01:Alframor7@cluster0.p0v3o.mongodb.net/Proyecto_final?retryWrites=true&w=majority";
+
+mongoose.connect(mongoURI)
   .then(async () => {
     console.log('Conectado a MongoDB');
     await seedDemoUser();
