@@ -128,8 +128,16 @@ function App() {
     e.preventDefault();
     const isEdit = editId !== null;
     let body = { ...form };
-    const url = isEdit ? `/api/${showModal}/${editId}` : `/api/${showModal}`;
-    const res = await api(url, { method: isEdit ? 'PUT' : 'POST', body: JSON.stringify(body) });
+    let url, method;
+    if (showModal === 'materias' && !isEdit) {
+      url = '/api/admin/asignaturas';
+      method = 'POST';
+      body = { tipo: 'materia', datos: { nombre: form.nombre, codigo: form.codigo, semestre: form.semestre } };
+    } else {
+      url = isEdit ? `/api/${showModal}/${editId}` : `/api/${showModal}`;
+      method = isEdit ? 'PUT' : 'POST';
+    }
+    const res = await api(url, { method, body: JSON.stringify(body) });
     if (!res) return alert('Error de conexión con el servidor');
     if (res.error) return alert(res.error);
     setShowModal(null); setForm({}); setEditId(null);
