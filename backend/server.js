@@ -74,7 +74,7 @@ app.delete('/api/calificaciones/:id', auth, borrarCalificacion);
 
 app.get('/api/historial/:id', auth, historialAlumno);
 
-const MONGO_URI = process.env.MONGODB_URI || "mongodb+srv://Alfranc01:Alframor7@cluster0.6nlj2kg.mongodb.net/Proyecto_final?retryWrites=true&w=majority";
+const MONGO_URI = process.env.MONGODB_URI || "mongodb+srv://Alfranc01:Alframor7@cluster0.bkgjejp.mongodb.net/Proyecto_final?retryWrites=true&w=majority";
 
 mongoose.connect(MONGO_URI)
   .then(async () => {
