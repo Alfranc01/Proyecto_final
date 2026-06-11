@@ -1,7 +1,7 @@
 # Proyecto Final - Base de Datos Avanzado
 
 **Alumno:** Alan Franco  
-**Tema:** Sistema Escolar Full-Stack  
+**Tema:** Aplicación Web con Persistencia en MongoDB 7  
 **Descripción:** Aplicación web con Node.js, Express y Mongoose sobre MongoDB 7 para la gestión de alumnos, materias, maestros y calificaciones académicas con autenticación JWT y control de acceso por roles (admin, maestro, alumno).
 
 ## Modelado de Datos
