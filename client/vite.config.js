@@ -7,8 +7,10 @@ export default defineConfig({
     port: 5173,
     proxy: {
       '/api': {
-        target: 'http://localhost:5000',
-        changeOrigin: true
+        // --- CAMBIO AQUÍ: Cambiamos localhost por tu URL real de Render ---
+        target: 'https://proyecto-final-2-1kya.onrender.com',
+        changeOrigin: true,
+        secure: false
       }
     }
   }
