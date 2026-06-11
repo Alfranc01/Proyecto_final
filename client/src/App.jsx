@@ -1,8 +1,15 @@
+const BASE_URL = window.location.hostname.includes('vercel.app') ? 'https://proyecto-final-2-1kya.onrender.com' : ''; 
 import { useState, useEffect } from 'react';
 import {
   GraduationCap, Users, BookOpen, BarChart3, LogOut, Plus, Trash2, Edit,
   UserCheck, ClipboardList, Calendar, History, CheckSquare, XSquare, ArrowUp, ArrowDown
 } from 'lucide-react';
+
+// --- CONFIGURACIÓN DE URL PARA PRODUCCIÓN ---
+// Si detecta que está corriendo en Vercel usa Render; si estás en tu compu local usa localhost.
+const BASE_URL = window.location.hostname.includes('vercel.app') 
+  ? 'https://proyecto-final-2-1kya.onrender.com' 
+  : '';
 
 const navItems = [
   { key: 'dashboard', label: 'Dashboard', icon: BarChart3 },
@@ -55,7 +62,8 @@ function App() {
 
   const api = async (url, opts = {}) => {
     try {
-      const res = await fetch(url, {
+      // Se le concatena el BASE_URL de Render al inicio de la petición
+      const res = await fetch(`${BASE_URL}${url}`, {
         ...opts,
         headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}), ...opts.headers },
       });
@@ -115,12 +123,13 @@ function App() {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    const res = await fetch('/api/login', {
+    // Agregamos el BASE_URL aquí también para que busque el login en Render
+    const res = await fetch(`${BASE_URL}/api/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password })
     });
-    if (!res.ok) return alert('Credenciales inválidas');
+    if (!res.ok) return alert('Credenciales inválidas o error de conexión');
     const data = await res.json();
     localStorage.setItem('token', data.token);
     setToken(data.token);
